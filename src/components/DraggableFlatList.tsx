@@ -116,9 +116,10 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     dataRef.current.map(keyExtractor).join("") !==
     props.data.map(keyExtractor).join("");
   dataRef.current = props.data;
-  if (dataHasChanged) {
-    // When data changes make sure `activeKey` is nulled out in the same render pass
-    activeKey = null;
+  if (dataHasChanged && !activeKey) {
+    // When data changes (and no drag is active) reset animated values.
+    // Guard against activeKey to prevent reset() from racing with the
+    // spring animation callback during an active drag.
     InteractionManager.runAfterInteractions(() => {
       reset();
     });
