@@ -1,8 +1,12 @@
-import Animated, { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import Animated, {
+  runOnJS,
+  useAnimatedReaction,
+  SharedValue,
+} from "react-native-reanimated";
 import { typedMemo } from "../utils";
 
 type Props = {
-  scrollOffset: Animated.SharedValue<number>;
+  scrollOffset: SharedValue<number>;
   onScrollOffsetChange: (offset: number) => void;
 };
 
@@ -10,14 +14,17 @@ const ScrollOffsetListener = ({
   scrollOffset,
   onScrollOffsetChange,
 }: Props) => {
-
-  useAnimatedReaction(() => {
-    return scrollOffset.value
-  }, (cur, prev) => {
-    if (cur !== prev) {
-      runOnJS(onScrollOffsetChange)(cur)
-    }
-  }, [scrollOffset])
+  useAnimatedReaction(
+    () => {
+      return scrollOffset.value;
+    },
+    (cur, prev) => {
+      if (cur !== prev) {
+        runOnJS(onScrollOffsetChange)(cur);
+      }
+    },
+    [scrollOffset],
+  );
 
   return null;
 };

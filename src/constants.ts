@@ -12,8 +12,6 @@ export const DEFAULT_ANIMATION_CONFIG: WithSpringConfig = {
   mass: 0.2,
   stiffness: 100,
   overshootClamping: false,
-  restSpeedThreshold: 0.2,
-  restDisplacementThreshold: 0.2,
 };
 
 export const DEFAULT_PROPS = {
@@ -35,6 +33,6 @@ export const isReanimatedV2 = !!useSharedValue;
 
 if (!isReanimatedV2) {
   throw new Error(
-    "Your version of react-native-reanimated is too old for react-native-draggable-flatlist!"
+    "Your version of react-native-reanimated is too old for react-native-draggable-flatlist!",
   );
 }

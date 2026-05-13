@@ -1,7 +1,11 @@
 import React, { useContext, useEffect } from "react";
 import { useMemo, useRef } from "react";
 import { FlatList } from "react-native-gesture-handler";
-import Animated, { type SharedValue, useSharedValue, WithSpringConfig } from "react-native-reanimated";
+import Animated, {
+  type SharedValue,
+  useSharedValue,
+  WithSpringConfig,
+} from "react-native-reanimated";
 import { DEFAULT_PROPS } from "../constants";
 import { useProps } from "./propsContext";
 import { CellData, DraggableFlatListProps } from "../types";
@@ -11,12 +15,12 @@ type RefContextValue<T> = {
   animationConfigRef: SharedValue<WithSpringConfig>;
   cellDataRef: React.MutableRefObject<Map<string, CellData>>;
   keyToIndexRef: React.MutableRefObject<Map<string, number>>;
-  containerRef: React.RefObject<Animated.View>;
+  containerRef: React.RefObject<Animated.View | null>;
   flatlistRef: React.RefObject<FlatList<T>> | React.ForwardedRef<FlatList<T>>;
-  scrollViewRef: React.RefObject<Animated.ScrollView>;
+  scrollViewRef: React.RefObject<Animated.ScrollView | null>;
 };
 const RefContext = React.createContext<RefContextValue<any> | undefined>(
-  undefined
+  undefined,
 );
 
 export default function RefProvider<T>({
@@ -34,7 +38,7 @@ export function useRefs<T>() {
   const value = useContext(RefContext);
   if (!value) {
     throw new Error(
-      "useRefs must be called from within a RefContext.Provider!"
+      "useRefs must be called from within a RefContext.Provider!",
     );
   }
   return value as RefContextValue<T>;
@@ -51,11 +55,12 @@ function useSetupRefs<T>({
   const propsRef = useRef(props);
   propsRef.current = props;
   const animConfig = useMemo(
-    () => ({
-      ...DEFAULT_PROPS.animationConfig,
-      ...animationConfig,
-    } as WithSpringConfig),
-    [animationConfig]
+    () =>
+      ({
+        ...DEFAULT_PROPS.animationConfig,
+        ...animationConfig,
+      }) as WithSpringConfig,
+    [animationConfig],
   );
 
   const animationConfigRef = useSharedValue(animConfig);
@@ -92,7 +97,7 @@ function useSetupRefs<T>({
       propsRef,
       scrollViewRef,
     }),
-    []
+    [],
   );
 
   return refs;

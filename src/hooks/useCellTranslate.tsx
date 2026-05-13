@@ -1,12 +1,16 @@
-import Animated, { useDerivedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  useDerivedValue,
+  withSpring,
+  SharedValue,
+} from "react-native-reanimated";
 import { useAnimatedValues } from "../context/animatedValueContext";
 import { useDraggableFlatListContext } from "../context/draggableFlatListContext";
 import { useRefs } from "../context/refContext";
 
 type Params = {
   cellIndex: number;
-  cellSize: Animated.SharedValue<number>;
-  cellOffset: Animated.SharedValue<number>;
+  cellSize: SharedValue<number>;
+  cellOffset: SharedValue<number>;
 };
 
 export function useCellTranslate({ cellIndex, cellSize, cellOffset }: Params) {

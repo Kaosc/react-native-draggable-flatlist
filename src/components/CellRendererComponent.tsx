@@ -20,6 +20,15 @@ import { useAnimatedValues } from "../context/animatedValueContext";
 import CellProvider from "../context/cellContext";
 import { useStableCallback } from "../hooks/useStableCallback";
 
+declare global {
+  var LayoutAnimationRepository: {
+    configs: Record<number, unknown>;
+    registerConfig: (tag: number, config: unknown) => void;
+    removeConfig: (tag: number) => void;
+  };
+  var RNDFLLayoutAnimationConfigStash: Record<string, unknown>;
+}
+
 type Props<T> = {
   item: T;
   index: number;
@@ -32,20 +41,35 @@ function CellRendererComponent<T>(props: Props<T>) {
   const { item, index, onLayout, children, ...rest } = props;
 
   const viewRef = useRef<Animated.View>(null);
+  const prevKeyRef = useRef<string | null>(null);
   const { cellDataRef, propsRef, containerRef } = useRefs<T>();
 
   const { horizontalAnim, scrollOffset } = useAnimatedValues();
-  const {
-    activeKey,
-    keyExtractor,
-    horizontal,
-    layoutAnimationDisabled,
-  } = useDraggableFlatListContext<T>();
+  const { activeKey, keyExtractor, horizontal, layoutAnimationDisabled } =
+    useDraggableFlatListContext<T>();
 
   const key = keyExtractor(item, index);
   const offset = useSharedValue(-1);
   const size = useSharedValue(-1);
   const heldTanslate = useSharedValue(0);
+
+  // Detect when this cell is being reused for a different item
+  // This happens when the key changes but we're in the same cell renderer instance
+  const keyChanged = prevKeyRef.current !== null && prevKeyRef.current !== key;
+
+  if (prevKeyRef.current !== key) {
+    prevKeyRef.current = key;
+  }
+
+  // When cell is reused for a new item, reset animation state to prevent flicker
+  React.useEffect(() => {
+    if (keyChanged) {
+      // Reset animation state for the new item
+      heldTanslate.value = 0;
+      offset.value = -1;
+      size.value = -1;
+    }
+  }, [key, keyChanged, heldTanslate, offset, size]);
 
   const translate = useCellTranslate({
     cellOffset: offset,
@@ -130,11 +154,8 @@ function CellRendererComponent<T>(props: Props<T>) {
     };
   }, [isActive, horizontal]);
 
-  const {
-    itemEnteringAnimation,
-    itemExitingAnimation,
-    itemLayoutAnimation,
-  } = propsRef.current;
+  const { itemEnteringAnimation, itemExitingAnimation, itemLayoutAnimation } =
+    propsRef.current;
 
   useEffect(() => {
     // NOTE: Keep an eye on reanimated LayoutAnimation refactor:
@@ -148,13 +169,14 @@ function CellRendererComponent<T>(props: Props<T>) {
     runOnUI((t: number | null, _layoutDisabled) => {
       "worklet";
       if (!t) return;
-      const config = global.LayoutAnimationRepository.configs[t];
+      const g = globalThis as any;
+      const config = g.LayoutAnimationRepository?.configs?.[t];
       if (config) stashConfig(t, config);
       const stashedConfig = getStashedConfig(t);
       if (_layoutDisabled) {
-        global.LayoutAnimationRepository.removeConfig(t);
+        g.LayoutAnimationRepository?.removeConfig(t);
       } else if (stashedConfig) {
-        global.LayoutAnimationRepository.registerConfig(t, stashedConfig);
+        g.LayoutAnimationRepository?.registerConfig(t, stashedConfig);
       }
     })(tag, layoutAnimationDisabled);
   }, [layoutAnimationDisabled]);
@@ -181,28 +203,23 @@ function CellRendererComponent<T>(props: Props<T>) {
 
 export default typedMemo(CellRendererComponent);
 
-declare global {
-  namespace NodeJS {
-    interface Global {
-      RNDFLLayoutAnimationConfigStash: Record<string, unknown>;
-    }
-  }
-}
-
 runOnUI(() => {
   "worklet";
-  global.RNDFLLayoutAnimationConfigStash = {};
+  const g = globalThis as any;
+  g.RNDFLLayoutAnimationConfigStash = {};
 })();
 
 function stashConfig(tag: number, config: unknown) {
   "worklet";
-  if (!global.RNDFLLayoutAnimationConfigStash)
-    global.RNDFLLayoutAnimationConfigStash = {};
-  global.RNDFLLayoutAnimationConfigStash[tag] = config;
+  const g = globalThis as any;
+  if (!g.RNDFLLayoutAnimationConfigStash)
+    g.RNDFLLayoutAnimationConfigStash = {};
+  g.RNDFLLayoutAnimationConfigStash[tag] = config;
 }
 
 function getStashedConfig(tag: number) {
   "worklet";
-  if (!global.RNDFLLayoutAnimationConfigStash) return null;
-  return global.RNDFLLayoutAnimationConfigStash[tag] as Record<string, unknown>;
+  const g = globalThis as any;
+  if (!g.RNDFLLayoutAnimationConfigStash) return null;
+  return g.RNDFLLayoutAnimationConfigStash[tag] as Record<string, unknown>;
 }

@@ -8,8 +8,8 @@ import {
 import { useAnimatedValues } from "./context/animatedValueContext";
 import { FlatList } from "react-native-gesture-handler";
 import Animated, {
-  AnimateProps,
   WithSpringConfig,
+  SharedValue,
 } from "react-native-reanimated";
 import { DEFAULT_PROPS } from "./constants";
 
@@ -42,15 +42,15 @@ export type DraggableFlatListProps<T> = Modify<
     renderItem: RenderItem<T>;
     renderPlaceholder?: RenderPlaceholder<T>;
     simultaneousHandlers?: React.Ref<any> | React.Ref<any>[];
-    outerScrollOffset?: Animated.SharedValue<number>;
+    outerScrollOffset?: SharedValue<number>;
     onAnimValInit?: (animVals: ReturnType<typeof useAnimatedValues>) => void;
-    itemEnteringAnimation?: AnimateProps<Animated.View>["entering"];
-    itemExitingAnimation?: AnimateProps<Animated.View>["exiting"];
-    itemLayoutAnimation?: AnimateProps<Animated.View>["layout"];
+    itemEnteringAnimation?: any;
+    itemExitingAnimation?: any;
+    itemLayoutAnimation?: any;
     enableLayoutAnimationExperimental?: boolean;
     onContainerLayout?: (params: {
       layout: LayoutChangeEvent["nativeEvent"]["layout"];
-      containerRef: React.RefObject<Animated.View>;
+      containerRef: React.RefObject<Animated.View | null>;
     }) => void;
   } & Partial<DefaultProps>
 >;
@@ -58,7 +58,7 @@ export type DraggableFlatListProps<T> = Modify<
 export type RenderPlaceholder<T> = (params: {
   item: T;
   index: number;
-}) => JSX.Element;
+}) => React.ReactElement;
 
 export type RenderItemParams<T> = {
   item: T;
@@ -69,14 +69,7 @@ export type RenderItemParams<T> = {
 
 export type RenderItem<T> = (params: RenderItemParams<T>) => React.ReactNode;
 
-export type AnimatedFlatListType = <T>(
-  props: Animated.AnimateProps<
-    FlatListProps<T> & {
-      ref: React.Ref<FlatList<T>>;
-      simultaneousHandlers?: React.Ref<any> | React.Ref<any>[];
-    }
-  >
-) => React.ReactElement;
+export type AnimatedFlatListType = <T>(props: any) => React.ReactElement;
 
 export type CellData = {
   measurements: {

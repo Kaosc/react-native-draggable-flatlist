@@ -23,6 +23,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
   withSpring,
+  createAnimatedComponent,
 } from "react-native-reanimated";
 import CellRendererComponent from "./CellRendererComponent";
 import { DEFAULT_PROPS } from "../constants";
@@ -40,21 +41,12 @@ import { useStableCallback } from "../hooks/useStableCallback";
 import ScrollOffsetListener from "./ScrollOffsetListener";
 import { typedMemo } from "../utils";
 
-type RNGHFlatListProps<T> = Animated.AnimateProps<
-  FlatListProps<T> & {
-    ref: React.Ref<FlatList<T>>;
-    simultaneousHandlers?: React.Ref<any> | React.Ref<any>[];
-  }
->;
-
 type OnViewableItemsChangedCallback<T> = Exclude<
   FlatListProps<T>["onViewableItemsChanged"],
   undefined | null
 >;
 
-const AnimatedFlatList = (Animated.createAnimatedComponent(
-  FlatList
-) as unknown) as <T>(props: RNGHFlatListProps<T>) => React.ReactElement;
+const AnimatedFlatList = createAnimatedComponent(FlatList) as any;
 
 function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
   const {
@@ -96,12 +88,13 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
   const {
     dragHitSlop = DEFAULT_PROPS.dragHitSlop,
     scrollEnabled = DEFAULT_PROPS.scrollEnabled,
-    activationDistance: activationDistanceProp = DEFAULT_PROPS.activationDistance,
+    activationDistance:
+      activationDistanceProp = DEFAULT_PROPS.activationDistance,
   } = props;
 
   let [activeKey, setActiveKey] = useState<string | null>(null);
   const [layoutAnimationDisabled, setLayoutAnimationDisabled] = useState(
-    !propsRef.current.enableLayoutAnimationExperimental
+    !propsRef.current.enableLayoutAnimationExperimental,
   );
 
   const keyExtractor = useStableCallback((item: T, index: number) => {
@@ -192,7 +185,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
       activeKey,
       extraData: props.extraData,
     }),
-    [activeKey, props.extraData]
+    [activeKey, props.extraData],
   );
 
   const renderItem: ListRenderItem<T> = useCallback(
@@ -212,7 +205,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
         />
       );
     },
-    [props.renderItem, props.extraData, drag, keyExtractor]
+    [props.renderItem, props.extraData, drag, keyExtractor],
   );
 
   const onRelease = useStableCallback((index: number) => {
@@ -232,7 +225,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
       onDragEnd?.({ from, to, data: newData });
 
       setActiveKey(null);
-    }
+    },
   );
 
   const onPlaceholderIndexChange = useStableCallback((index: number) => {
@@ -256,7 +249,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
         }
       }
     },
-    [isTouchActiveNative, onDragEnd, onRelease]
+    [isTouchActiveNative, onDragEnd, onRelease],
   );
 
   useAnimatedReaction(
@@ -268,7 +261,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
         runOnJS(onPlaceholderIndexChange)(cur);
       }
     },
-    [spacerIndexAnim]
+    [spacerIndexAnim],
   );
 
   const gestureDisabled = useSharedValue(false);
@@ -312,7 +305,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
             to: spacerIndexAnim.value,
           });
           disabled.value = false;
-        }
+        },
       );
     })
     .onTouchesDown(() => {
@@ -326,7 +319,10 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
 
   if (dragHitSlop) panGesture.hitSlop(dragHitSlop);
   if (activationDistanceProp) {
-    const activeOffset = [-activationDistanceProp, activationDistanceProp];
+    const activeOffset: [number, number] = [
+      -activationDistanceProp,
+      activationDistanceProp,
+    ];
     if (props.horizontal) {
       panGesture.activeOffsetX(activeOffset);
     } else {
@@ -347,7 +343,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
         runOnJS(onScroll)(scrollOffset.value);
       },
     },
-    [horizontalAnim]
+    [horizontalAnim],
   );
 
   useAutoScroll();
@@ -413,7 +409,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
 
 function DraggableFlatList<T>(
   props: DraggableFlatListProps<T>,
-  ref?: React.ForwardedRef<FlatList<T>> | null
+  ref?: React.ForwardedRef<FlatList<T>> | null,
 ) {
   return (
     <PropsProvider {...props}>
@@ -431,5 +427,5 @@ const MemoizedInner = typedMemo(DraggableFlatListInner);
 // Generic forwarded ref type assertion taken from:
 // https://fettblog.eu/typescript-react-generic-forward-refs/#option-1%3A-type-assertion
 export default React.forwardRef(DraggableFlatList) as <T>(
-  props: DraggableFlatListProps<T> & { ref?: React.ForwardedRef<FlatList<T>> }
+  props: DraggableFlatListProps<T> & { ref?: React.ForwardedRef<FlatList<T>> },
 ) => ReturnType<typeof DraggableFlatList>;

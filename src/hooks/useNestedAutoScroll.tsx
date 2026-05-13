@@ -3,6 +3,7 @@ import Animated, {
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
+  SharedValue,
 } from "react-native-reanimated";
 import { State as GestureState } from "react-native-gesture-handler";
 import { useSafeNestableScrollContainerContext } from "../context/nestableScrollContainerContext";
@@ -16,20 +17,16 @@ import { SCROLL_POSITION_TOLERANCE } from "../constants";
 // TODO: see if we can combine into a single shared `useAutoScroll()` hook
 
 export function useNestedAutoScroll(params: {
-  activeCellSize?: Animated.SharedValue<number>;
+  activeCellSize?: SharedValue<number>;
   autoscrollSpeed?: number;
   autoscrollThreshold?: number;
-  hoverOffset?: Animated.SharedValue<number>;
-  isDraggingCell?: Animated.SharedValue<number>;
-  isTouchActiveNative?: Animated.SharedValue<number>;
-  panGestureState?: Animated.SharedValue<GestureState | number>;
+  hoverOffset?: SharedValue<number>;
+  isDraggingCell?: SharedValue<number>;
+  isTouchActiveNative?: SharedValue<number>;
+  panGestureState?: SharedValue<GestureState | number>;
 }) {
-  const {
-    outerScrollOffset,
-    containerSize,
-    scrollableRef,
-    scrollViewSize,
-  } = useSafeNestableScrollContainerContext();
+  const { outerScrollOffset, containerSize, scrollableRef, scrollViewSize } =
+    useSafeNestableScrollContainerContext();
 
   const DUMMY_VAL = useSharedValue(0);
 
@@ -52,7 +49,9 @@ export function useNestedAutoScroll(params: {
 
   const isScrolledDown = useDerivedValue(() => {
     return (
-      outerScrollOffset.value + containerSize.value + SCROLL_POSITION_TOLERANCE >=
+      outerScrollOffset.value +
+        containerSize.value +
+        SCROLL_POSITION_TOLERANCE >=
       scrollViewSize.value
     );
   }, []);
@@ -62,7 +61,8 @@ export function useNestedAutoScroll(params: {
   }, [hoverScreenOffset]);
 
   const distToBottomEdge = useDerivedValue(() => {
-    const dist = containerSize.value - (hoverScreenOffset.value + activeCellSize.value)
+    const dist =
+      containerSize.value - (hoverScreenOffset.value + activeCellSize.value);
     return Math.max(0, dist);
   }, [hoverScreenOffset, activeCellSize, containerSize]);
 
@@ -85,7 +85,7 @@ export function useNestedAutoScroll(params: {
         scrollTarget.value = outerScrollOffset.value;
       }
     },
-    [activeCellSize]
+    [activeCellSize],
   );
 
   function scrollToInternal(y: number) {
@@ -98,7 +98,9 @@ export function useNestedAutoScroll(params: {
     const bottomDisabled = isAtBottomEdge.value && isScrolledDown.value;
     const isEdgeDisabled = topDisabled || bottomDisabled;
 
-    const scrollTargetDiff = Math.abs(scrollTarget.value - outerScrollOffset.value);
+    const scrollTargetDiff = Math.abs(
+      scrollTarget.value - outerScrollOffset.value,
+    );
     const scrollInProgress = scrollTargetDiff > SCROLL_POSITION_TOLERANCE;
 
     const shouldScroll =

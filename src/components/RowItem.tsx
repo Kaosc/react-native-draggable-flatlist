@@ -29,7 +29,7 @@ function RowItem<T>(props: Props<T>) {
       // already dragging an item, noop
       if (debug)
         console.log(
-          "## attempt to drag item while another item is already active, noop"
+          "## attempt to drag item while another item is already active, noop",
         );
     }
     drag(itemKey);
@@ -65,7 +65,7 @@ type InnerProps<T> = {
 };
 
 function Inner<T>({ renderItem, extraData, ...rest }: InnerProps<T>) {
-  return renderItem({ ...rest }) as JSX.Element;
+  return renderItem({ ...rest }) as any;
 }
 
 const MemoizedInner = typedMemo(Inner);

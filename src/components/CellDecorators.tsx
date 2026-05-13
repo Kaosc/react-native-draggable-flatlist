@@ -15,7 +15,7 @@ type ScaleProps = {
 
 export const ScaleDecorator = ({ activeScale = 1.1, children }: ScaleProps) => {
   const { isActive, onActiveAnim } = useOnCellActiveAnimation({
-    animationConfig: { mass: 0.1, restDisplacementThreshold: 0.0001 },
+    animationConfig: { mass: 0.1, damping: 50 },
   });
   const { horizontal } = useDraggableFlatListContext<any>();
 
