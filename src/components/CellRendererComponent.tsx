@@ -61,15 +61,14 @@ function CellRendererComponent<T>(props: Props<T>) {
     prevKeyRef.current = key;
   }
 
-  // When cell is reused for a new item, reset animation state to prevent flicker
+  // When cell is reused for a new item, reset animation translation to prevent flicker
   React.useEffect(() => {
     if (keyChanged) {
-      // Reset animation state for the new item
+      // Only reset the held translation, not the measurements
+      // onLayout will fire and update measurements for the new item
       heldTanslate.value = 0;
-      offset.value = -1;
-      size.value = -1;
     }
-  }, [key, keyChanged, heldTanslate, offset, size]);
+  }, [key, keyChanged, heldTanslate]);
 
   const translate = useCellTranslate({
     cellOffset: offset,
@@ -79,14 +78,9 @@ function CellRendererComponent<T>(props: Props<T>) {
 
   const isActive = activeKey === key;
 
-  // Reset held translate when drag ends, in case onCellLayout doesn't fire
-  // (e.g. when FlatList doesn't detect a geometry change for the cell).
-  // By this point the spring animation has already completed.
-  useEffect(() => {
-    if (!activeKey) {
-      heldTanslate.value = 0;
-    }
-  }, [activeKey]);
+  // Don't reset held translate when drag ends - wait for onLayout to fire
+  // The held translation is needed until the cell's new position is measured
+  // This prevents the cell from briefly jumping back to its old position
 
   const animStyle = useAnimatedStyle(() => {
     // When activeKey becomes null at the end of a drag and the list reorders,
@@ -132,7 +126,16 @@ function CellRendererComponent<T>(props: Props<T>) {
   });
 
   const onCellLayout = useStableCallback((e?: LayoutChangeEvent) => {
-    heldTanslate.value = 0;
+    // Only reset heldTanslate if we're not currently dragging
+    // During drag, we use heldTanslate to prevent flicker
+    // After drag ends, onLayout will fire which updates measurements and
+    // triggers the final repositioning before we clear the held value
+    if (!activeKey) {
+      // Defer the reset slightly to allow the new layout to settle
+      requestAnimationFrame(() => {
+        heldTanslate.value = 0;
+      });
+    }
     updateCellMeasurements();
     if (onLayout && e) onLayout(e);
   });

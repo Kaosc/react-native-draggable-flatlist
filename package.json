@@ -1,6 +1,6 @@
 {
   "name": "@kaosc/react-native-draggable-flatlist",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "description": "A drag-and-drop-enabled FlatList component for React Native",
   "keywords": [
     "react-native",

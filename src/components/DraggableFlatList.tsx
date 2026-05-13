@@ -113,7 +113,8 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     // When data changes (and no drag is active) reset animated values.
     // Guard against activeKey to prevent reset() from racing with the
     // spring animation callback during an active drag.
-    InteractionManager.runAfterInteractions(() => {
+    // Use requestAnimationFrame instead of deprecated InteractionManager
+    requestAnimationFrame(() => {
       reset();
     });
   }
