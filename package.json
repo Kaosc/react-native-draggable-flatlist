@@ -1,25 +1,7 @@
 {
-  "name": "react-native-draggable-flatlist",
-  "version": "4.0.3",
+  "name": "@kaosc/react-native-draggable-flatlist",
+  "version": "4.0.4",
   "description": "A drag-and-drop-enabled FlatList component for React Native",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
-  "react-native": "src/index.tsx",
-  "types": "lib/typescript/index.d.ts",
-  "scripts": {
-    "test": "jest",
-    "typecheck": "tsc --skipLibCheck --noEmit",
-    "build": "bob build"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/computerjazz/react-native-draggable-flatlist.git"
-  },
   "keywords": [
     "react-native",
     "sortable",
@@ -30,27 +12,32 @@
     "sort",
     "list"
   ],
-  "author": "Daniel Merrill",
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/Kaosc/react-native-draggable-flatlist#readme",
   "bugs": {
-    "url": "https://github.com/computerjazz/react-native-draggable-flatlist/issues"
+    "url": "https://github.com/Kaosc/react-native-draggable-flatlist/issues"
   },
-  "jest": {
-    "preset": "react-native",
-    "setupFiles": [
-      "./node_modules/react-native-gesture-handler/jestSetup.js",
-      "./jest-setup.js"
-    ],
-    "transform": {
-      "^.+\\.[t|j]sx?$": "babel-jest"
-    },
-    "transformIgnorePatterns": []
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kaosc/react-native-draggable-flatlist.git"
   },
-  "homepage": "https://github.com/computerjazz/react-native-draggable-flatlist#readme",
-  "peerDependencies": {
-    "react-native": ">=0.64.0",
-    "react-native-gesture-handler": ">=2.0.0",
-    "react-native-reanimated": ">=2.8.0"
+  "license": "MIT",
+  "author": "Daniel Merrill",
+  "type": "commonjs",
+  "main": "lib/commonjs/index",
+  "types": "lib/typescript/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest",
+    "typecheck": "tsc --skipLibCheck --noEmit",
+    "build": "bob build"
+  },
+  "dependencies": {
+    "@babel/preset-typescript": "^7.17.12"
   },
   "devDependencies": {
     "@testing-library/react-native": "^7.2.0",
@@ -70,6 +57,29 @@
     "react-test-renderer": "^17.0.2",
     "typescript": "^4.2.4"
   },
+  "peerDependencies": {
+    "react-native": ">=0.64.0",
+    "react-native-gesture-handler": ">=2.0.0",
+    "react-native-reanimated": ">=2.8.0"
+  },
+  "module": "lib/module/index",
+  "react-native": "src/index.tsx",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "jest": {
+    "preset": "react-native",
+    "setupFiles": [
+      "./node_modules/react-native-gesture-handler/jestSetup.js",
+      "./jest-setup.js"
+    ],
+    "transform": {
+      "^.+\\.[t|j]sx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": []
+  },
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
@@ -83,8 +93,5 @@
       "module",
       "typescript"
     ]
-  },
-  "dependencies": {
-    "@babel/preset-typescript": "^7.17.12"
   }
 }
