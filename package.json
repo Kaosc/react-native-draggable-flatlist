@@ -1,5 +1,5 @@
 {
-  "name": "@kaosc/@kaosc/react-native-draggable-flatlist",
+  "name": "@kaosc/react-native-draggable-flatlist",
   "version": "4.0.6",
   "description": "A drag-and-drop-enabled FlatList component for React Native",
   "keywords": [
@@ -15,13 +15,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://github.com/Kaosc/@kaosc/react-native-draggable-flatlist#readme",
+  "homepage": "https://github.com/Kaosc/react-native-draggable-flatlist#readme",
   "bugs": {
-    "url": "https://github.com/Kaosc/@kaosc/react-native-draggable-flatlist/issues"
+    "url": "https://github.com/Kaosc/react-native-draggable-flatlist/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kaosc/@kaosc/react-native-draggable-flatlist.git"
+    "url": "git+https://github.com/Kaosc/react-native-draggable-flatlist.git"
   },
   "license": "MIT",
   "author": "Daniel Merrill",
@@ -91,7 +91,7 @@
   "codegenConfig": {
     "libraries": [
       {
-        "name": "@kaosc/@kaosc/react-native-draggable-flatlist",
+        "name": "@kaosc/react-native-draggable-flatlist",
         "type": "components",
         "jsSrcsDir": "src"
       }

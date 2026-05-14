@@ -104,19 +104,29 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     return props.keyExtractor(item, index);
   });
 
+  const pendingDragEndRef = useRef(false);
+  const pendingTimerRef = useRef<any>(null);
   const dataRef = useRef(props.data);
   const dataHasChanged =
     dataRef.current.map(keyExtractor).join("") !==
     props.data.map(keyExtractor).join("");
-  dataRef.current = props.data;
-  if (dataHasChanged && !activeKey) {
-    // When data changes (and no drag is active) reset animated values.
-    // Guard against activeKey to prevent reset() from racing with the
-    // spring animation callback during an active drag.
-    // Use requestAnimationFrame instead of deprecated InteractionManager
-    requestAnimationFrame(() => {
-      reset();
-    });
+
+  if (dataHasChanged) {
+    // If we recently ended a drag that caused a data update, prefer to
+    // wait for the parent's data change before clearing active state to
+    // avoid visual flick where the item briefly jumps back to its old
+    // position. Use requestAnimationFrame to allow layout to settle.
+    if (pendingDragEndRef.current || !activeKey) {
+      pendingDragEndRef.current = false;
+      if (pendingTimerRef.current) {
+        clearTimeout(pendingTimerRef.current);
+        pendingTimerRef.current = null;
+      }
+      requestAnimationFrame(() => {
+        reset();
+      });
+    }
+    dataRef.current = props.data;
   }
 
   useEffect(() => {
@@ -225,7 +235,21 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
 
       onDragEnd?.({ from, to, data: newData });
 
-      setActiveKey(null);
+      // If the reorder actually changed the data, defer clearing activeKey
+      // until the parent updates the `data` prop (see dataHasChanged logic).
+      if (from === to) {
+        setActiveKey(null);
+      } else {
+        pendingDragEndRef.current = true;
+        // Fallback timer: if parent doesn't update data within 600ms,
+        // clear active state to avoid holding the active cell indefinitely.
+        if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+        pendingTimerRef.current = globalThis.setTimeout(() => {
+          pendingDragEndRef.current = false;
+          pendingTimerRef.current = null;
+          setActiveKey(null);
+        }, 600);
+      }
     },
   );
 
