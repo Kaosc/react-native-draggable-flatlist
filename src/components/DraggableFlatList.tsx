@@ -77,7 +77,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     touchTranslate.value = 0;
     activeCellSize.value = -1;
     activeCellOffset.value = -1;
-    setActiveKey(null);
+    // Don't call setActiveKey(null) here - it's now managed externally
   });
 
   const {
@@ -92,6 +92,8 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
   const [layoutAnimationDisabled, setLayoutAnimationDisabled] = useState(
     !propsRef.current.enableLayoutAnimationExperimental,
   );
+  const pendingClearActiveKeyRef = useRef(false);
+  const pendingClearTimeoutRef = useRef<any>(null);
 
   const keyExtractor = useStableCallback((item: T, index: number) => {
     if (!props.keyExtractor) {
@@ -110,13 +112,22 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     data.map(keyExtractor).join("");
 
   if (dataHasChanged) {
-    // If we recently ended a drag that caused a data update, prefer to
-    // wait for the parent's data change before clearing active state to
-    // avoid visual flick where the item briefly jumps back to its old
-    // position. Use requestAnimationFrame to allow layout to settle.
-    requestAnimationFrame(() => {
-      reset();
-    });
+    // Data changed (either from parent or from internal drag reorder).
+    // If we have a pending clear flag, the FlatList has now re-rendered with
+    // new data at new indices. Clear activeKey and reset animations so cells
+    // can be displayed at their natural positions.
+    if (pendingClearActiveKeyRef.current) {
+      if (pendingClearTimeoutRef.current) {
+        clearTimeout(pendingClearTimeoutRef.current);
+        pendingClearTimeoutRef.current = null;
+      }
+      pendingClearActiveKeyRef.current = false;
+      setActiveKey(null);
+      // Use requestAnimationFrame to ensure animations are reset after this render
+      requestAnimationFrame(() => {
+        reset();
+      });
+    }
     dataRef.current = data;
   }
 
@@ -230,7 +241,31 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
 
       onDragEnd?.({ from, to, data: newData });
 
-      setActiveKey(null);
+      // Don't clear activeKey immediately. Set a pending flag that will
+      // trigger after FlatList re-renders with the new data. This ensures
+      // cells use their held animation values while transitioning to new indices.
+      if (from !== to) {
+        pendingClearActiveKeyRef.current = true;
+        // Safety timeout in case data doesn't change (shouldn't happen normally)
+        if (pendingClearTimeoutRef.current) {
+          clearTimeout(pendingClearTimeoutRef.current);
+        }
+        pendingClearTimeoutRef.current = setTimeout(() => {
+          if (pendingClearActiveKeyRef.current) {
+            pendingClearActiveKeyRef.current = false;
+            setActiveKey(null);
+            requestAnimationFrame(() => {
+              reset();
+            });
+          }
+        }, 50);
+      } else {
+        // No reorder, just clear immediately
+        setActiveKey(null);
+        requestAnimationFrame(() => {
+          reset();
+        });
+      }
     },
   );
 
