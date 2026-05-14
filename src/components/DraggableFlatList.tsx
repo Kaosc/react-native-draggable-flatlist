@@ -6,12 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ListRenderItem,
-  FlatListProps,
-  LayoutChangeEvent,
-  InteractionManager,
-} from "react-native";
+import { ListRenderItem, FlatListProps, LayoutChangeEvent } from "react-native";
 import {
   FlatList,
   Gesture,
@@ -93,6 +88,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
   } = props;
 
   let [activeKey, setActiveKey] = useState<string | null>(null);
+  const [data, setData] = useState(props.data);
   const [layoutAnimationDisabled, setLayoutAnimationDisabled] = useState(
     !propsRef.current.enableLayoutAnimationExperimental,
   );
@@ -104,29 +100,24 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
     return props.keyExtractor(item, index);
   });
 
-  const pendingDragEndRef = useRef(false);
-  const pendingTimerRef = useRef<any>(null);
-  const dataRef = useRef(props.data);
+  useEffect(() => {
+    setData(props.data);
+  }, [props.data]);
+
+  const dataRef = useRef(data);
   const dataHasChanged =
     dataRef.current.map(keyExtractor).join("") !==
-    props.data.map(keyExtractor).join("");
+    data.map(keyExtractor).join("");
 
   if (dataHasChanged) {
     // If we recently ended a drag that caused a data update, prefer to
     // wait for the parent's data change before clearing active state to
     // avoid visual flick where the item briefly jumps back to its old
     // position. Use requestAnimationFrame to allow layout to settle.
-    if (pendingDragEndRef.current || !activeKey) {
-      pendingDragEndRef.current = false;
-      if (pendingTimerRef.current) {
-        clearTimeout(pendingTimerRef.current);
-        pendingTimerRef.current = null;
-      }
-      requestAnimationFrame(() => {
-        reset();
-      });
-    }
-    dataRef.current = props.data;
+    requestAnimationFrame(() => {
+      reset();
+    });
+    dataRef.current = data;
   }
 
   useEffect(() => {
@@ -143,11 +134,11 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
   }, [activeKey]);
 
   useLayoutEffect(() => {
-    props.data.forEach((d, i) => {
+    data.forEach((d, i) => {
       const key = keyExtractor(d, i);
       keyToIndexRef.current.set(key, i);
     });
-  }, [props.data, keyExtractor, keyToIndexRef]);
+  }, [data, keyExtractor, keyToIndexRef]);
 
   const drag = useStableCallback((activeKey: string) => {
     if (disabled.value) return;
@@ -225,31 +216,21 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
 
   const onDragEnd = useStableCallback(
     ({ from, to }: { from: number; to: number }) => {
-      const { onDragEnd, data } = props;
+      const { onDragEnd } = props;
 
-      const newData = [...data];
+      const newData = [...dataRef.current];
       if (from !== to) {
         newData.splice(from, 1);
-        newData.splice(to, 0, data[from]);
+        newData.splice(to, 0, dataRef.current[from]);
+      }
+
+      if (from !== to) {
+        setData(newData);
       }
 
       onDragEnd?.({ from, to, data: newData });
 
-      // If the reorder actually changed the data, defer clearing activeKey
-      // until the parent updates the `data` prop (see dataHasChanged logic).
-      if (from === to) {
-        setActiveKey(null);
-      } else {
-        pendingDragEndRef.current = true;
-        // Fallback timer: if parent doesn't update data within 600ms,
-        // clear active state to avoid holding the active cell indefinitely.
-        if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
-        pendingTimerRef.current = globalThis.setTimeout(() => {
-          pendingDragEndRef.current = false;
-          pendingTimerRef.current = null;
-          setActiveKey(null);
-        }, 600);
-      }
+      setActiveKey(null);
     },
   );
 
@@ -406,7 +387,7 @@ function DraggableFlatListInner<T>(props: DraggableFlatListProps<T>) {
           )}
           <AnimatedFlatList
             {...props}
-            data={props.data}
+            data={data}
             onViewableItemsChanged={onViewableItemsChanged}
             CellRendererComponent={CellRendererComponent}
             ref={flatlistRef}

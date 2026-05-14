@@ -41,7 +41,6 @@ function CellRendererComponent<T>(props: Props<T>) {
   const { item, index, onLayout, children, ...rest } = props;
 
   const viewRef = useRef<Animated.View>(null);
-  const prevKeyRef = useRef<string | null>(null);
   const { cellDataRef, propsRef, containerRef } = useRefs<T>();
 
   const { horizontalAnim, scrollOffset } = useAnimatedValues();
@@ -53,23 +52,6 @@ function CellRendererComponent<T>(props: Props<T>) {
   const size = useSharedValue(-1);
   const heldTanslate = useSharedValue(0);
 
-  // Detect when this cell is being reused for a different item
-  // This happens when the key changes but we're in the same cell renderer instance
-  const keyChanged = prevKeyRef.current !== null && prevKeyRef.current !== key;
-
-  if (prevKeyRef.current !== key) {
-    prevKeyRef.current = key;
-  }
-
-  // When cell is reused for a new item, reset animation translation to prevent flicker
-  React.useEffect(() => {
-    if (keyChanged) {
-      // Only reset the held translation, not the measurements
-      // onLayout will fire and update measurements for the new item
-      heldTanslate.value = 0;
-    }
-  }, [key, keyChanged, heldTanslate]);
-
   const translate = useCellTranslate({
     cellOffset: offset,
     cellSize: size,
@@ -78,9 +60,14 @@ function CellRendererComponent<T>(props: Props<T>) {
 
   const isActive = activeKey === key;
 
-  // Don't reset held translate when drag ends - wait for onLayout to fire
-  // The held translation is needed until the cell's new position is measured
-  // This prevents the cell from briefly jumping back to its old position
+  // Reset held translate when drag ends, in case onCellLayout doesn't fire
+  // (e.g. when FlatList doesn't detect a geometry change for the cell).
+  // By this point the spring animation has already completed.
+  useEffect(() => {
+    if (!activeKey) {
+      heldTanslate.value = 0;
+    }
+  }, [activeKey]);
 
   const animStyle = useAnimatedStyle(() => {
     // When activeKey becomes null at the end of a drag and the list reorders,
@@ -126,16 +113,7 @@ function CellRendererComponent<T>(props: Props<T>) {
   });
 
   const onCellLayout = useStableCallback((e?: LayoutChangeEvent) => {
-    // Only reset heldTanslate if we're not currently dragging
-    // During drag, we use heldTanslate to prevent flicker
-    // After drag ends, onLayout will fire which updates measurements and
-    // triggers the final repositioning before we clear the held value
-    if (!activeKey) {
-      // Defer the reset slightly to allow the new layout to settle
-      requestAnimationFrame(() => {
-        heldTanslate.value = 0;
-      });
-    }
+    heldTanslate.value = 0;
     updateCellMeasurements();
     if (onLayout && e) onLayout(e);
   });
