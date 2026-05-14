@@ -14,16 +14,16 @@ To use swipeable list items in a DraggableFlatList see [React Native Swipeable I
 with `npm`:
 
 ```
-npm install --save @kaosc/react-native-draggable-flatlist
+npm install --save @kaosc/@kaosc/react-native-draggable-flatlist
 ```
 
 with `yarn`:
 
 ```
-yarn add @kaosc/react-native-draggable-flatlist
+yarn add @kaosc/@kaosc/react-native-draggable-flatlist
 ```
 
-3. `import DraggableFlatList from '@kaosc/react-native-draggable-flatlist'`
+3. `import DraggableFlatList from '@kaosc/@kaosc/react-native-draggable-flatlist'`
 
 ## Api
 
@@ -74,7 +74,7 @@ It's possible to render multiple `DraggableFlatList` components within a single 
 > Note: When using NestableDraggableFlatLists, all React Native warnings about nested list performance will be disabled. 
 
 ```tsx
-import { NestableScrollContainer, NestableDraggableFlatList } from "react-native-draggable-flatlist"
+import { NestableScrollContainer, NestableDraggableFlatList } from "@kaosc/react-native-draggable-flatlist"
 
 ...
 
@@ -120,7 +120,7 @@ import React, { useState } from "react";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import DraggableFlatList, {
   ScaleDecorator,
-} from "react-native-draggable-flatlist";
+} from "@kaosc/react-native-draggable-flatlist";
 
 const NUM_ITEMS = 10;
 function getColor(i: number) {

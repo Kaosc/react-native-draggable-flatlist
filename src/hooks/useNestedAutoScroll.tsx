@@ -9,7 +9,7 @@ import { State as GestureState } from "react-native-gesture-handler";
 import { useSafeNestableScrollContainerContext } from "../context/nestableScrollContainerContext";
 import { SCROLL_POSITION_TOLERANCE } from "../constants";
 
-// This is mostly copied over from the main react-native-draggable-flatlist
+// This is mostly copied over from the main @kaosc/react-native-draggable-flatlist
 // useAutoScroll hook with a few notable exceptions:
 // - Since animated values are now coming in via a callback,
 //   we won't guarantee they exist (and default them if not).

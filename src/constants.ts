@@ -33,6 +33,6 @@ export const isReanimatedV2 = !!useSharedValue;
 
 if (!isReanimatedV2) {
   throw new Error(
-    "Your version of react-native-reanimated is too old for react-native-draggable-flatlist!",
+    "Your version of react-native-reanimated is too old for @kaosc/react-native-draggable-flatlist!",
   );
 }
